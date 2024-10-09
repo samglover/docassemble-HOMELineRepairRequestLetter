@@ -1,0 +1,322 @@
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+---
+metadata:
+  title: >-
+    Home line repair request letter
+  short title: >-
+    Home line repair request letter
+  description: |-
+    Home line repair request letter
+  can_I_use_this_form: |
+    In order to use this form you must be a tenant renting a residential property (an apartment or house) in Minnesota. 
+  maturity: production
+  estimated_completion_minutes: ""
+  estimated_completion_delta: ""
+  LIST_topics: 
+    - "HO-05-00-00-00"
+  tags:
+    - "HO-05-00-00-00"
+  authors:
+    - Sam Glover
+  original_form: []
+  original_form_published_on: ""
+  allowed_courts: []
+  typical_role: "plaintiff"
+  al_weaver_version: "1.11.0"
+  generated_on: "2024-10-09"
+  languages:
+    - en
+  jurisdiction: ""
+  review_date: 2024-10-09
+  form_titles:
+    - Home line repair request letter
+  form_numbers: []
+  update_notes: |
+---
+code: |
+  # This controls the default country and list of states in address field questions
+  AL_DEFAULT_COUNTRY = "US"
+---
+code: |
+  # This controls the default state in address field questions
+  AL_DEFAULT_STATE = ""
+---
+code: |
+  github_repo_name =  'docassemble-HomeLineRepairRequestLetter'
+---
+code: |
+  interview_short_title = "Write a Home line repair request letter"
+---
+code: |
+  al_form_type = "letter" 
+---
+objects:
+  - users: ALPeopleList.using(ask_number=True,target_number=1)
+  - other_parties: ALPeopleList.using(ask_number=True,target_number=1)
+  - repairs: DAList
+---
+sections:
+  - review_home_line_repair_request_letter: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_home_line_repair_request_letter
+code: |
+  # Set the allowed courts for this interview
+  nav.set_section("review_home_line_repair_request_letter")
+  user_role = "tenant"
+  user_ask_role = "tenant"
+  users.gather()
+  set_parts(subtitle=str(users))
+  users[0].address.address
+  other_parties.gather()
+  set_progress(25)
+  other_parties[0].address.address
+  repairs
+  set_progress(50)
+  sent_date
+  interview_order_home_line_repair_request_letter = True
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  al_intro_screen
+  # home_line_repair_request_letter_intro
+  interview_order_home_line_repair_request_letter
+  signature_date
+  # Store anonymous data for analytics / statistics
+  store_variables_snapshot(
+      persistent=True,
+      data={
+          "zip": showifdef("users[0].address.zip"),
+          "reached_interview_end": True,
+      },
+  )
+  home_line_repair_request_letter_download
+---
+id: Home_line_repair_request_letter
+continue button field: home_line_repair_request_letter_intro
+question: |
+  Home line repair request letter
+subquestion: |
+  Before you get started, you need to...
+---
+id: user i's address
+question: |
+  % if i == 0 and al_person_answering == "user":
+  What is your address?
+  % else:
+  What is ${ users[i] }'s address?
+  % endif
+subquestion: |
+  Use the address of the rental property.
+fields:
+  - label: |
+      % if i > 0 and al_person_answering == "user":
+      Same as your address
+      % else:
+      Same as ${ users[0] }'s address
+      % endif
+    field: users[i].address
+    datatype: object_radio
+    choices:
+      - users[0].address if defined("users[0].address.address") else None
+    object labeler: |
+      lambda y: y.on_one_line()      
+    none of the above: |
+      Somewhere else
+    disable others: True
+    show if:
+      code: |
+        i > 0 and defined("users[0].address.address")
+  - ${ users[i].address.address_label}: users[i].address.address
+    address autocomplete: True
+  - ${ users[i].address.unit_label}: users[i].address.unit
+    required: False
+  - ${ users[i].address.city_label}: users[i].address.city
+  - ${ users[i].address.state_label}: users[i].address.state
+    code: |
+      states_list(country_code=AL_DEFAULT_COUNTRY)
+    default: ${ AL_DEFAULT_STATE }
+  - ${ users[i].address.zip_label}: users[i].address.zip
+    required: False
+#  - ${ users[i].address.country_label}: users[i].address.country
+#    code: countries_list()
+#    default: ${ AL_DEFAULT_COUNTRY }
+---
+sets:
+  - other_parties[i].name.first
+  - other_parties[i].name.last
+  - other_parties[i].name.middle
+  - other_parties[i].name.suffix
+id: names of opposing parties
+question: |
+  Name of ${ ordinal(i) } **landlord** or property manager
+subquestion: |
+  Use the name of the person or business you pay rent to that is named in the lease.
+fields:
+  - code: |
+      other_parties[i].name_fields(person_or_business='unsure')
+---
+id: Repairs
+question: |
+  Describe the repair
+fields:
+  - "Repairs": repairs[i]
+---
+id: Sent date
+question: |
+  Mailing date
+fields:
+  - no label: sent_date
+    datatype: date
+---
+id: preview home_line_repair_request_letter
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.   
+  
+  ${ al_recipient_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Edit answers" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review_home_line_repair_request_letter'), label='Edit answers', color='info') }
+  
+  Remember to come back to this window to continue and sign your form.
+continue button field: home_line_repair_request_letter_preview_question    
+---
+code: |
+  signature_fields = []
+---
+id: home line repair request letter review screen
+event: review_home_line_repair_request_letter
+question: |
+  Review your answers
+review:
+  - Edit: users.revisit
+    button: |
+      **Users**
+
+      % for item in users:
+        * ${ item }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **Other parties**
+
+      % for item in other_parties:
+        * ${ item }
+      % endfor
+  - Edit: repairs
+    button: |
+      **Repairs**:
+      ${ repairs }
+  - Edit: sent_date
+    button: |
+      **Date of Sent**:
+      ${ sent_date }
+  - Edit: repairs
+    button: |
+      **Repairs**:
+      ${ repairs }
+---
+continue button field: users.revisit
+question: |
+  Edit users
+subquestion: |
+  ${ users.table }
+
+  ${ users.add_action() }
+---
+table: users.table
+rows: users
+columns:
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+  - Name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+edit:
+  - address.address
+  - name.first
+confirm: True
+
+---
+continue button field: other_parties.revisit
+question: |
+  Edit other_parties
+subquestion: |
+  ${ other_parties.table }
+
+  ${ other_parties.add_action() }
+---
+table: other_parties.table
+rows: other_parties
+columns:
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+  - Name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+edit:
+  - address.address
+  - name.first
+confirm: True
+
+---
+id: download home_line_repair_request_letter
+event: home_line_repair_request_letter_download
+question: |
+  All done
+subquestion: |
+  Thank you ${users}. Your form is ready to download and deliver.
+  
+  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_home_line_repair_request_letter'), label='Edit answers', color='info') }
+  
+  
+  ${ al_user_bundle.download_list_html() }
+  
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=True) }
+
+progress: 100
+---
+# ALDocument objects specify the metadata for each template
+objects:
+  - home_line_repair_request_letter_Post_interview_instructions: ALDocument.using(title="Instructions", filename="home_line_repair_request_letter_next_steps.docx", enabled=True, has_addendum=False)
+  - home_line_repair_request_letter_attachment: ALDocument.using(title="Home line repair request letter", filename="home_line_repair_request_letter", enabled=True, has_addendum=False, )
+---
+# Bundles group the ALDocuments into separate downloads, such as for court and for the user
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[home_line_repair_request_letter_Post_interview_instructions, home_line_repair_request_letter_attachment], filename="home_line_repair_request_letter", title="All forms to download for your records", enabled=True)
+  - al_recipient_bundle: ALDocumentBundle.using(elements=[home_line_repair_request_letter_attachment],  filename="home_line_repair_request_letter", title="All forms to file", enabled=True)
+---
+# Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the same template is 
+# used for "preview" and "final" keys, and logic in the template checks the value of 
+# `i` to show or hide the user's signature
+attachment:
+  name: Post-interview-Instructions
+  filename: home_line_repair_request_letter_next_steps
+  docx template file: home_line_repair_request_letter_next_steps.docx
+  variable name: home_line_repair_request_letter_Post_interview_instructions[i]
+  skip undefined: True
+  tagged pdf: True
+---
+attachment:
+  name: home line repair request letter
+  filename: home_line_repair_request_letter
+  variable name: home_line_repair_request_letter_attachment[i]
+  skip undefined: True
+  docx template file: home_line_repair_request_letter.docx
+  tagged pdf: True
+
+
+
