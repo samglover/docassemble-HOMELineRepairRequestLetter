@@ -4,11 +4,11 @@ include:
 ---
 metadata:
   title: >-
-    Home line repair request letter
+    HOME Line repair request letter
   short title: >-
-    Home line repair request letter
+    HOME Line repair request letter
   description: |-
-    Home line repair request letter
+    This interview completes a letter to a landlord requesting repairs to a residential property in Minnesota.
   can_I_use_this_form: |
     In order to use this form you must be a tenant renting a residential property (an apartment or house) in Minnesota. 
   maturity: production
@@ -31,7 +31,7 @@ metadata:
   jurisdiction: ""
   review_date: 2024-10-09
   form_titles:
-    - Home line repair request letter
+    - HOME Line repair request letter
   form_numbers: []
   update_notes: |
 ---
@@ -47,7 +47,7 @@ code: |
   github_repo_name =  'docassemble-HomeLineRepairRequestLetter'
 ---
 code: |
-  interview_short_title = "Write a Home line repair request letter"
+  interview_short_title = "Write a repair request letter"
 ---
 code: |
   al_form_type = "letter" 
@@ -55,7 +55,7 @@ code: |
 objects:
   - users: ALPeopleList.using(ask_number=True,target_number=1)
   - other_parties: ALPeopleList.using(ask_number=True,target_number=1)
-  - repairs: DAList
+  - repairs: DAList.using(minimum_number=1)
 ---
 sections:
   - review_home_line_repair_request_letter: Review your answers
@@ -75,7 +75,7 @@ code: |
   other_parties.gather()
   set_progress(25)
   other_parties[0].address.address
-  repairs
+  repairs.there_are_any = True
   set_progress(50)
   sent_date
   interview_order_home_line_repair_request_letter = True
@@ -99,13 +99,6 @@ code: |
       },
   )
   home_line_repair_request_letter_download
----
-id: Home_line_repair_request_letter
-continue button field: home_line_repair_request_letter_intro
-question: |
-  Home line repair request letter
-subquestion: |
-  Before you get started, you need to...
 ---
 id: user i's address
 question: |
@@ -164,18 +157,34 @@ fields:
   - code: |
       other_parties[i].name_fields(person_or_business='unsure')
 ---
-id: Repairs
+id: First repair
 question: |
-  Describe the repair
+  % if repairs.number_gathered() == 0:
+    Describe the repair you want ${ other_parties[0] } to make
+  % else:
+    Describe another repair you want ${ other_parties[0] } to make
+  % endif
 fields:
-  - "Repairs": repairs[i]
+  - no label: repairs[i]
 ---
-id: Sent date
+id: Additional repair
 question: |
-  Mailing date
+  Would you like to add another repair?
+subquestion: |
+  Here are your repair requests so far:
+  
+  % for repair in repairs:
+  1. ${ repair }
+  % endfor
+yesno: repairs.there_is_another
+---
+id: Mailing date
+question: |
+  What date will you mail this letter?
 fields:
   - no label: sent_date
     datatype: date
+    default: ${ today() }
 ---
 id: preview home_line_repair_request_letter
 question: |
@@ -203,96 +212,97 @@ question: |
 review:
   - Edit: users.revisit
     button: |
-      **Users**
-
-      % for item in users:
-        * ${ item }
-      % endfor
+      **You:**
+      
+      ${ users[0] }
   - Edit: other_parties.revisit
     button: |
-      **Other parties**
+      **Landlord or property manager:**
 
-      % for item in other_parties:
-        * ${ item }
-      % endfor
-  - Edit: repairs
+      ${ other_parties[0] }
+  - Edit: repairs.revisit
     button: |
-      **Repairs**:
-      ${ repairs }
+      **Repair requests:**
+      
+      % for repair in repairs:
+        1. ${ repair }
+      % endfor
   - Edit: sent_date
     button: |
-      **Date of Sent**:
+      **Mailing date**
+      
       ${ sent_date }
-  - Edit: repairs
-    button: |
-      **Repairs**:
-      ${ repairs }
 ---
 continue button field: users.revisit
 question: |
-  Edit users
+  Edit your name and address
 subquestion: |
   ${ users.table }
-
-  ${ users.add_action() }
 ---
 table: users.table
 rows: users
 columns:
-  - Address: |
-      row_item.address.block() if defined("row_item.address.address") else ""
   - Name: |
       row_item.name.full() if defined("row_item.name.first") else ""
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
 edit:
-  - address.address
   - name.first
+  - address.address
 confirm: True
-
 ---
 continue button field: other_parties.revisit
 question: |
-  Edit other_parties
+  Edit the landlord or property manager's name and address
 subquestion: |
   ${ other_parties.table }
-
-  ${ other_parties.add_action() }
 ---
 table: other_parties.table
 rows: other_parties
 columns:
-  - Address: |
-      row_item.address.block() if defined("row_item.address.address") else ""
   - Name: |
       row_item.name.full() if defined("row_item.name.first") else ""
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
 edit:
-  - address.address
   - name.first
+  - address.address
 confirm: True
-
+---
+continue button field: repairs.revisit
+question: |
+  Edit your repair requests
+subquestion: |
+  ${ repairs.table }
+  
+  ${ repairs.add_action() }
+---
+table: repairs.table
+rows: repairs
+columns:
+  - Repairs: |
+      row_item
+edit: True
+confirm: True
 ---
 id: download home_line_repair_request_letter
 event: home_line_repair_request_letter_download
 question: |
   All done
 subquestion: |
-  Thank you ${users}. Your form is ready to download and deliver.
-  
-  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
+  Thank you ${users}. Your letter and instructions for using it are ready to view download using the buttons below. Click the **Review or edit answers** button to review or change your answers.
 
-  ${ action_button_html(url_action('review_home_line_repair_request_letter'), label='Edit answers', color='info') }
-  
+  ${ action_button_html(url_action('review_home_line_repair_request_letter'), label='Review or edit answers', color='info') }
   
   ${ al_user_bundle.download_list_html() }
-  
 
   ${ al_user_bundle.send_button_html(show_editable_checkbox=True) }
-
 progress: 100
 ---
 # ALDocument objects specify the metadata for each template
 objects:
   - home_line_repair_request_letter_Post_interview_instructions: ALDocument.using(title="Instructions", filename="home_line_repair_request_letter_next_steps.docx", enabled=True, has_addendum=False)
-  - home_line_repair_request_letter_attachment: ALDocument.using(title="Home line repair request letter", filename="home_line_repair_request_letter", enabled=True, has_addendum=False, )
+  - home_line_repair_request_letter_attachment: ALDocument.using(title="HOME Line repair request letter", filename="home_line_repair_request_letter", enabled=True, has_addendum=False, )
 ---
 # Bundles group the ALDocuments into separate downloads, such as for court and for the user
 objects:
