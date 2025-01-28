@@ -176,7 +176,11 @@ subquestion: |
   % for repair in repairs:
   1. ${ repair }
   % endfor
-yesno: repairs.there_is_another
+field: repairs.there_is_another
+buttons:
+  - Add another repair: True
+  - I'm finished: False
+    color: secondary
 ---
 id: Mailing date
 question: |
