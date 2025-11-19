@@ -1,6 +1,7 @@
 ---
 include:
   - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.HOMELineTheme:main.yml
 ---
 metadata:
   title: >-

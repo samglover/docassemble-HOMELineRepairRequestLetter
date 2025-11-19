@@ -50,11 +50,10 @@ setup(name='docassemble.HOMELineRepairRequestLetter',
       long_description_content_type='text/markdown',
       author='Sam Glover',
       author_email='sam.glover@suffolk.edu',
-      license='The MIT License',
+      license='MIT',
       url='https://courtformsonline.org',
       packages=find_namespace_packages(),
-      install_requires=['docassemble.AssemblyLine>=3.2.0'],
+      install_requires=['docassemble.AssemblyLine @ git+https://github.com/SuffolkLITLab/docassemble-AssemblyLine.git@main'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/HOMELineRepairRequestLetter/', package='docassemble.HOMELineRepairRequestLetter'),
      )
-
